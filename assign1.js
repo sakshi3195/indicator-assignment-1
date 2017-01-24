@@ -6,6 +6,7 @@ var instream = fs.createReadStream('../Indicators.csv');
 var outstream = new stream;
 var rl = readline.createInterface(instream, outstream);
 var head;
+var highval=[];
 var count=0;
 var sum=0;
 var sumavg=0;
@@ -17,7 +18,10 @@ var result=[];
 var obj1=[];
 var count1=[];
 var c=0;
+var highval=[];
+var highval1=[];
 var BirthRate;
+var final=[];
 for(var i=0;i<54;i++){
   count1[i]=0;
 }
@@ -52,17 +56,16 @@ if((line.indexOf("SP.DYN.LE00.MA.IN")>-1)||(line.indexOf("SP.DYN.LE00.FE.IN")>-1
       for(var j=0;j<head.length;j++){
    if(head[j]=="Year"||head[j]=="Value"){
     if(head[j]=="Year"){
-      year=currentline[j];
-    
-    }
-    
+      year=currentline[j];    
+    }    
     if(head[j]=="Value"){
       if(line.indexOf("SP.DYN.LE00.MA.IN")>-1){
       count++;
       val=parseFloat(currentline[j]);
-      sum=sum+val;
-      
-    }else{
+      sum=sum+val;      
+    }
+    else
+    {
       count2++;
       val=parseFloat(currentline[j]);
       sum2=sum2+val;
@@ -115,9 +118,13 @@ if((line.indexOf("SP.DYN.LE00.MA.IN")>-1)||(line.indexOf("SP.DYN.LE00.FE.IN")>-1
                                  }
                                  }
                                   if(c==2){
-                                obj.Year=+Year;
+                                //obj.Year=+Year;
+                                obj.year=year;
                                 obj.DeathRate= +DeathRate;
                                 obj.BirthRate= +BirthRate;
+                                DeathRate=0;
+                                BirthRate=0;
+
                               
                                 result2.push(obj);
                                 c=0;
@@ -129,10 +136,29 @@ if((line.indexOf("SP.DYN.LE00.MA.IN")>-1)||(line.indexOf("SP.DYN.LE00.FE.IN")>-1
      }
       
     
-});
+
+
+
+
+ if((line.indexOf("Life expectancy at birth")>-1)&&(line.indexOf("2013")>-1))
+{
+var obj = {} ;
+var currentline=line.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/);
+for(var j=0;j<head.length;j++)
+{
+  if(head[j]==="CountryName"||head[j]==="Value")
+     {
+  obj[head[j]]=currentline[j];
+  
+     }
+   }
+ }
+   final.push(obj);
+
+ }); 
+
 rl.on('close', function() {
- 
- 
+  
  var p1=JSON.stringify(result);
  p1=p1.replace("[","[\n\t");
  p1= p1.replace(/},/g,"},\n\t");
@@ -154,24 +180,30 @@ if(err){
  
  fs.writeFile("text2.JSON",p2,function(err) {
 if(err){
-    throw err;
+    throw err
 }
 
 });
- var obj3=obj1.splice(0,5);
- var p3=JSON.stringify(obj3);
+
+ highval=final.sort(function(a,b)
+ {
+  return b.Value-a.Value;
+ });
+  highval1=highval.slice(0,5);
+var p3=JSON.stringify(highval1);
  p3=p3.replace("[","[\n\t");
  p3= p3.replace(/},/g,"},\n\t");
  p3= p3.replace(/\\"/g,"");
-
+ p3=p3.replace(/,/g,",\n\t");
+ p3=p3.replace(/\n/g,"")
+ p3=p3.replace(/\s+/g,'').trim();
  console.log(p3);
- 
  fs.writeFile("text3.JSON",p3,function(err) {
 if(err){
     throw err;
 }
-//file.close();
 });
+
  
 //file.close();
 });
